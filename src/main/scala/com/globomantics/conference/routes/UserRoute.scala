@@ -9,6 +9,7 @@ import com.globomantics.conference.services._
 import scala.concurrent.Future
 
 trait UserRoute {
+  self: UserServiceComponent =>
 
   private val USER_API = "user"
 
@@ -21,9 +22,15 @@ trait UserRoute {
         (post & entity(as[User])) { user =>
 
           val createUserResult: Future[ServiceResponse[User]] = create(user)
-          respondWith(createUserResult)
+          respondWith(createUserResult, StatusCodes.Created)
         }
-      }
+      } ~
+        path(JavaUUID){id =>
+          get {
+            val readResult = read(id)
+            respondWith(readResult)
+          }
+        }
     }
 
 }

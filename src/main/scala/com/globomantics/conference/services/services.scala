@@ -48,7 +48,7 @@ package object services {
                          message: Option[String] = None,
                          data: JsValue = JsString(""))
 
-  def respondWith[A](response: Future[ServiceResponse[A]])
+  def respondWith[A](response: Future[ServiceResponse[A]], statusCode: StatusCode = StatusCodes.OK)
                     (implicit ee: JsonWriter[ErrorResponse], ar: JsonWriter[ApiResponse], rr: JsonWriter[A]): StandardRoute =
     complete {
       response map {
@@ -62,7 +62,7 @@ package object services {
 
         case Right(value) =>
           HttpResponse(
-            status = StatusCodes.Created,
+            status = statusCode,
             entity =
               HttpEntity(
                 ContentTypes.`application/json`,
