@@ -9,11 +9,10 @@ import com.globomantics.conference.services._
 import scala.concurrent.Future
 
 trait UserRoute {
-  self: UserServiceComponent =>
 
   private val USER_API = "user"
 
-  val user: Route =
+  def user(implicit userClient: ServiceClient[User]): Route =
     pathPrefix(USER_API){
 
       pathEndOrSingleSlash {

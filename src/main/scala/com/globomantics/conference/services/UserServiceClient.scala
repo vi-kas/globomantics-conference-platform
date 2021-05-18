@@ -1,5 +1,6 @@
 package com.globomantics.conference.services
 
+import com.globomantics.conference.dao.UserDaoComponent
 import com.globomantics.conference.model.Model.User
 
 import java.util.UUID
@@ -7,32 +8,43 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class UserServiceClient extends ServiceClient[User] {
+  this: UserDaoComponent =>
 
   override def create(entity: User): Future[ServiceResponse[User]] =
-    Future {
-      println(s"ServiceClient: Creating a User with ID: ${entity.id}")
-
-      Right(entity)
-    }
+    userDao
+      .insert(entity)
+      .map(Right(_))
+      .recover{
+        case e: Exception => Left(ErrorResponse(e.getMessage, 0))
+      }
 
   override def read(id: UUID): Future[ServiceResponse[User]] =
-    Future {
-      println(s"ServiceClient: Reading a User with ID: $id")
-
-      Left(ErrorResponse(s"No user with id: $id", 0))
-    }
+    userDao
+      .byId(id)
+      .map {
+        case None => Left(ErrorResponse(s"Could not find User with Id: $id", 0))
+        case Some(user) => Right(user)
+      }
+      .recover {
+        case e: Exception => Left(ErrorResponse(e.getMessage, 0))
+      }
 
   override def update(id: UUID, entity: User): Future[ServiceResponse[User]] =
-    Future {
-      println(s"ServiceClient: Updating User with ID: $id")
-
-      Left(ErrorResponse(s"No user with id: $id", 0))
-    }
+    userDao
+      .update(id, entity)
+      .map(Right(_))
+      .recover {
+        case e: Exception => Left(ErrorResponse(e.getMessage, 0))
+      }
 
   override def delete(id: UUID): Future[ServiceResponse[Boolean]] =
-    Future {
-      println(s"ServiceClient: Deleting User with ID: $id")
-
-      Left(ErrorResponse(s"No user with id: $id", 0))
-    }
+    userDao
+      .remove(id)
+      .map {
+        case true => Right(true)
+        case _ => Left(ErrorResponse("Could not delete User with given ID", 0))
+      }
+      .recover{
+        case e: Exception => Left(ErrorResponse(e.getMessage, 0))
+      }
 }

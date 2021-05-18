@@ -3,6 +3,8 @@ package com.globomantics.conference
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.StandardRoute
+import com.globomantics.conference.dao.{Dao, UserDaoComponent, UserDaoInMemory}
+import com.globomantics.conference.model.Model
 import spray.json.{JsString, JsValue, JsonWriter, _}
 
 import java.util.UUID
@@ -73,4 +75,13 @@ package object services {
   private def toStatusCode(i: Int): StatusCode =
     Try(StatusCode.int2StatusCode(i))
       .getOrElse(StatusCodes.InternalServerError)
+
+  object Implicits {
+    implicit val userClient = {
+      new UserServiceClient
+        with UserDaoComponent {
+        override val userDao: Dao[Model.User] = new UserDaoInMemory
+      }
+    }
+  }
 }

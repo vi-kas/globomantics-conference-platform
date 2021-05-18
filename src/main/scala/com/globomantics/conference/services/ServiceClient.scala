@@ -13,8 +13,3 @@ trait ServiceClient[T] {
 
   def delete(id: UUID): Future[ServiceResponse[Boolean]]
 }
-
-object ServiceClient {
-
-  implicit val userServiceClient = new UserServiceClient
-}
