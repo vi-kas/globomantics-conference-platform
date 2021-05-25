@@ -3,7 +3,7 @@ package com.globomantics.conference
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.StandardRoute
-import com.globomantics.conference.dao.{Dao, UserDaoComponent, UserDaoInMemory}
+import com.globomantics.conference.dao.{Dao, UserDaoComponent, UserDaoPostgres}
 import com.globomantics.conference.model.Model
 import spray.json.{JsString, JsValue, JsonWriter, _}
 
@@ -77,10 +77,11 @@ package object services {
       .getOrElse(StatusCodes.InternalServerError)
 
   object Implicits {
-    implicit val userClient = {
+    implicit val userClient: UserServiceClient = {
       new UserServiceClient
         with UserDaoComponent {
-        override val userDao: Dao[Model.User] = new UserDaoInMemory
+
+        override val userDao: Dao[Model.User] = new UserDaoPostgres
       }
     }
   }

@@ -10,48 +10,56 @@ import scala.concurrent.Future
 
 class UserDaoPostgres extends Dao[User] {
 
-  val driver = slick.jdbc.PostgresProfile
-  val db = driver.api.Database.forConfig("conferencedb")
+  val CONFIG: String = "conferencedb"
 
+  val driver = slick.jdbc.PostgresProfile
   import driver.api._
 
   val table = TableQuery[UserTable]
 
-  //def initSchema(): Future[Unit] =
-  dropSchema().map(_ => createSchema())
+  lazy val db: driver.backend.DatabaseDef = Database.forConfig(CONFIG)
 
-  def dropSchema(): Future[Unit] = db.run {
-    table.schema.dropIfExists
-  }
+  override def insert(user: User): Future[User] =
+    db.run {
+      table returning table += user
+    }
 
-  def createSchema(): Future[Unit] = db.run {
-    table.schema.create
-  }
+  override def byId(id: UUID): Future[Option[User]] =
+    db.run {
+      table.filter(_.id === id).result.headOption
+    }
 
-  override def insert(user: User): Future[User] = db.run {
-    table returning table += user
-  }
-
-  override def byId(id: UUID): Future[Option[User]] = db.run {
-    table.filter(_.id === id).result.headOption
-  }
-
-  override def all: Future[Seq[User]] = db.run {
-    table.to[Seq].result
-  }
-
-  override def update(id: UUID, user: User): Future[User] = {
+  override def update(id: UUID, user: User): Future[User] =
     db.run {
       table insertOrUpdate user
     }.map(success =>
       if(success == 1) user
       else throw ErrorResponse(s"Could not update user with ID: $id", 0)
     )
-  }
 
-  override def remove(id: UUID): Future[Boolean] = db.run {
-    table.filter(_.id === id).delete.map(_ > 0)
-  }
+  override def remove(id: UUID): Future[Boolean] =
+    db.run {
+      table.filter(_.id === id).delete.map(_ > 0)
+    }
+
+
+  override def all: Future[Seq[User]] =
+    db.run {
+      table.to[Seq].result
+    }
+
+  def initSchema(): Future[Unit] =
+    dropSchema().map(_ => createSchema())
+
+  def dropSchema(): Future[Unit] =
+    db.run {
+      table.schema.dropIfExists
+    }
+
+  def createSchema(): Future[Unit] =
+    db.run {
+      table.schema.create
+    }
 
   def byEmail(email: String): Future[Option[User]] = db.run {
     table.filter(_.email === email).result.headOption
