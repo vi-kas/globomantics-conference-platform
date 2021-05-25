@@ -61,6 +61,7 @@ Enter inside interactive bash shell on the container to use postgres
 
 Open psql for localhost
 > psql -h localhost -U postgres -d postgres
+
 > psql -h localhost -U trustworthy -d pgconfedb
 
 Above command says Open psql server running on `localhost` under user `postgres` and connect to database named `postgres`.
