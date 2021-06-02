@@ -10,13 +10,21 @@ import scala.concurrent.Future
 class UserServiceClient extends ServiceClient[User] {
   this: UserDaoComponent =>
 
-  override def create(entity: User): Future[ServiceResponse[User]] =
-    userDao
-      .insert(entity)
+  override def create(user: User): Future[ServiceResponse[User]] = {
+    val result: Future[User] =
+      for {
+        userWithAddress <- user.ensureAddressDetails
+        userInserted    <- userDao.insert(userWithAddress)
+      } yield {
+        userInserted
+      }
+
+    result
       .map(Right(_))
-      .recover{
+      .recover {
         case e: Exception => Left(ErrorResponse(e.getMessage, 0))
       }
+  }
 
   override def read(id: UUID): Future[ServiceResponse[User]] =
     userDao

@@ -3,8 +3,10 @@ package com.globomantics.conference
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.StandardRoute
-import com.globomantics.conference.dao.{Dao, UserDaoComponent, UserDaoPostgres}
+import com.globomantics.conference.dao.{Dao, UserDaoComponent, UserDaoInMemory, UserDaoPostgres}
 import com.globomantics.conference.model.Model
+import com.globomantics.conference.model.Model.{Location, User}
+import com.globomantics.conference.util.ZIPCodeLocator.fetchLocation
 import spray.json.{JsString, JsValue, JsonWriter, _}
 
 import java.util.UUID
@@ -81,8 +83,63 @@ package object services {
       new UserServiceClient
         with UserDaoComponent {
 
-        override val userDao: Dao[Model.User] = new UserDaoPostgres
+        override val userDao: Dao[Model.User] = new UserDaoInMemory
       }
+    }
+  }
+
+  import com.globomantics.conference.util.ZIPCodeLocator.locateZIPCode
+
+  implicit class UserOps(user: User) {
+
+    import monocle.macros.syntax.lens._
+
+    def ensureAddressDetails: Future[User] = {
+      val location = user.address.location
+
+      (location.city, location.country) match {
+
+        case (None, None) => {
+          val zipCodeFuture: Future[Location] = locateZIPCode(location.pin)
+
+          zipCodeFuture
+            .map(fetchLocation => {
+              // update user's location here
+              user.lens(_.address.location).set(fetchLocation)
+            })
+        }
+
+        case _ => Future.successful(user)
+      }
+    }
+
+
+
+    def ensureAddressDetailsWithoutLens: Future[User] = {
+
+      val location = user.address.location
+
+      (location.city, location.country) match {
+        case (None, None) =>
+          locateZIPCode(location.pin)
+            .map {
+              fetchedLocation =>
+                user
+                  .copy(
+                    address =
+                      user.address.copy(
+                        location =
+                          location.copy(
+                            city = fetchedLocation.city,
+                            country = fetchedLocation.country
+                          )
+                      )
+                  )
+            }
+
+        case _ => Future.successful(user)
+      }
+
     }
   }
 }

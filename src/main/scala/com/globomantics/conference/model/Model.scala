@@ -42,5 +42,6 @@ object Model
                   role: UserRole) extends Entity
 
   case class Address(addressLine: Option[String], location: Location)
+
   case class Location(pin: String, city: Option[String], country: Option[String])
 }
