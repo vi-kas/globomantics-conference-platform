@@ -14,7 +14,8 @@ class UserServiceClient extends ServiceClient[User] {
     val result: Future[User] =
       for {
         userWithAddress <- user.ensureAddressDetails
-        userInserted    <- userDao.insert(userWithAddress)
+        userToInsert    <- userWithAddress.ensurePasswordEncrypted
+        userInserted    <- userDao.insert(userToInsert)
       } yield {
         userInserted
       }

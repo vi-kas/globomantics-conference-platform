@@ -113,6 +113,15 @@ package object services {
       }
     }
 
+    import com.globomantics.conference.util.PasswordHasher._
+
+    def ensurePasswordEncrypted: Future[User] =
+      memoizedBcrypt(user.password)
+        .map { encrypted =>
+          user.copy(password = encrypted)
+        }
+
+
 
 
     def ensureAddressDetailsWithoutLens: Future[User] = {

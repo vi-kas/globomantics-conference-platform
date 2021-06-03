@@ -5,6 +5,8 @@ lazy val SCALATEST_VERSION  = "3.2.7"
 lazy val SLICK_VERSION      = "3.3.3"
 lazy val PGRES_VERSION      = "9.4-1206-jdbc42"
 lazy val MONOCLE_VERSION    = "2.0.0"
+lazy val BCRYPT_VERSION     = "4.1"
+lazy val SCALAZ_VERSION     = "7.2.29"
 
 lazy val root = (project in file("."))
   .settings(
@@ -28,6 +30,10 @@ lazy val root = (project in file("."))
         /* Monocle Dependencies */
         "com.github.julien-truffaut" %% "monocle-core" % MONOCLE_VERSION,
         "com.github.julien-truffaut" %% "monocle-macro" % MONOCLE_VERSION,
+
+        /* Bcrypt Dependency */
+        "com.github.t3hnar"   %% "scala-bcrypt"         % BCRYPT_VERSION,
+        "org.scalaz"          %% "scalaz-core"          % SCALAZ_VERSION,
 
         /* Test Dependencies */
         "org.scalactic"         %% "scalactic"            % SCALATEST_VERSION,
